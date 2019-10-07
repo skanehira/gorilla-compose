@@ -8,24 +8,24 @@ type DockerCompose struct {
 }
 
 type Service struct {
-	Image           string
-	ContainerName   string
-	Ports           []string
-	Volumes         []string
-	Command         []string
-	Entrypoint      []string
-	Environment     map[string]string
-	Labels          map[string]string
-	Restart         string
-	StopGracePeriod string
-	StopSignal      string
-	User            string
-	WorkingDir      string
-	Domainname      string
-	HostName        string
-	MacAddress      string
-	StdinOpen       bool
-	Tty             bool
+	Image           string            `yaml:"image"`
+	ContainerName   string            `yaml:"container_name"`
+	Ports           []string          `yaml:"ports"`
+	Volumes         []string          `yaml:"volumes"`
+	Command         []string          `yaml:"command"`
+	Entrypoint      []string          `yaml:"entrypoint"`
+	Environment     map[string]string `yaml:"environment"`
+	Labels          map[string]string `yaml:"labels"`
+	Restart         string            `yaml:"restart"`
+	StopGracePeriod string            `yaml:"stop_grace_period"`
+	StopSignal      string            `yaml:"stop_signal"`
+	User            string            `yaml:"user"`
+	WorkingDir      string            `yaml:"working_dir"`
+	Domainname      string            `yaml:"domainname"`
+	HostName        string            `yaml:"host_name"`
+	MacAddress      string            `yaml:"mac_address"`
+	StdinOpen       bool              `yaml:"stdin_open"`
+	Tty             bool              `yaml:"tty"`
 
 	// Privileged      bool // TODO suppor privileged
 	// EnvFile         []string // TODO support EnvFile
