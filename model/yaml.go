@@ -10,16 +10,12 @@ type DockerCompose struct {
 type Service struct {
 	Image           string
 	ContainerName   string
-	Build           Build
 	Ports           []string
 	Volumes         []string
 	Command         []string
-	DependsOn       []string
 	Entrypoint      []string
-	EnvFile         []string
 	Environment     map[string]string
-	Expose          []int
-	Labels          []string
+	Labels          map[string]string
 	Restart         string
 	StopGracePeriod string
 	StopSignal      string
@@ -28,11 +24,14 @@ type Service struct {
 	Domainname      string
 	HostName        string
 	MacAddress      string
-	Privileged      bool
-	ReadOnly        bool
 	StdinOpen       bool
 	Tty             bool
 
+	// Privileged      bool // TODO suppor privileged
+	// EnvFile         []string // TODO support EnvFile
+	// DependsOn       []string // TODO support DependsOn
+	// Build           Build // TODO support build
+	// Expose          []int // TODO support Expose
 	// TODO CapAdd          []string
 	// TODO CadDrop         []string
 	// TODO CgroupParent    string
