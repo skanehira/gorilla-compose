@@ -1,36 +1,43 @@
 package docker
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/docker/docker/client"
+	"github.com/skanehira/go-compose/model"
 )
 
-// Client docker client
-var Client *Docker
+type Client interface {
+	CreateContainer(networkName, serviceName string, s model.Service) (string, error)
+	CreateNetwork(name string) (string, error)
+	Ping() error
+}
 
-// Docker docker client
 type Docker struct {
 	*client.Client
 }
 
 // ClientConfig docker client config
 type ClientConfig struct {
-	host       string
-	apiVersion string
+	Host       string
+	ApiVersion string
 }
 
-// NewDocker create new docker client
-func NewDocker(host, version string) *Docker {
+// NewClient create new docker client
+func NewClient(config ClientConfig) *Docker {
 	// TODO use tls
 	// refer client.NewEnvClient
-	c, err := client.NewClient(host, version, nil, nil)
+	c, err := client.NewClient(config.Host, config.ApiVersion, nil, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
 
-	Client = &Docker{c}
+	return &Docker{c}
+}
 
-	return Client
+func (d *Docker) Ping() error {
+	_, err := d.Client.Ping(context.Background())
+	return err
 }

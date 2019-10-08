@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/skanehira/go-compose/compose"
 	"github.com/skanehira/go-compose/docker"
 	"github.com/skanehira/go-compose/model"
 	"gopkg.in/yaml.v2"
@@ -17,8 +18,7 @@ var (
 	api         = flag.String("api", "1.40", "docker engine api version")
 )
 
-var notFoundComposeFile = `
-Can't find a suitable configuration file in this directory or any
+var notFoundComposeFile = `Can't find a suitable configuration file in this directory or any
 parent. Are you in the right directory?
 
 Supported filenames: docker-compose.yaml
@@ -37,34 +37,33 @@ func parseComposeFile() model.DockerCompose {
 
 	data, err := ioutil.ReadAll(file)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't read file: %s\n", err)
+		fmt.Fprintf(os.Stderr, "can't read file: %s\n", err)
 		os.Exit(1)
 	}
 
 	var compose model.DockerCompose
 	if err := yaml.Unmarshal(data, &compose); err != nil {
-		fmt.Fprintf(os.Stderr, "Can't unmarshal yaml file: %s\n", err)
+		fmt.Fprintf(os.Stderr, "can't unmarshal yaml file: %s\n", err)
 		os.Exit(1)
 	}
 
+	for name, co := range compose.Services {
+		co.Name = name
+	}
+
+	compose.Name = *composeFile
 	return compose
 }
 
 func main() {
-	docker.NewDocker(*host, *api)
-	//if _, err := docker.Client.Ping(context.Background()); err != nil {
-	//	fmt.Fprintln(os.Stderr, err)
-	//	os.Exit(1)
-	//}
-	compose := parseComposeFile()
+	com := compose.NewCompose(docker.NewClient(docker.ClientConfig{Host: *host, ApiVersion: *api}))
+	if err := com.Ping(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
-	networkName := "compose_test"
-	docker.Client.CreateNetwork(networkName)
-	for n, s := range compose.Services {
-		fmt.Println(n)
-		_, err := docker.Client.CreateContainer(networkName, n, s)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-		}
+	compose := parseComposeFile()
+	if err := com.CreateService(compose); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 	}
 }

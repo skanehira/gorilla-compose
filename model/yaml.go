@@ -3,11 +3,13 @@ package model
 // NOTE go-compose is only support 3,7
 // Reference https://docs.docker.com/compose/compose-file/
 type DockerCompose struct {
-	Version  string
-	Services map[string]Service
+	Name     string             `yaml:"-"`
+	Version  string             `yaml:"version"`
+	Services map[string]Service `yaml:"services"`
 }
 
 type Service struct {
+	Name            string            `yaml:"-"`
 	Image           string            `yaml:"image"`
 	ContainerName   string            `yaml:"container_name"`
 	Ports           []string          `yaml:"ports"`
