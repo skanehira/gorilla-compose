@@ -9,7 +9,8 @@ import (
 )
 
 func (c *Docker) CreateNetwork(name string) (string, error) {
-	res, err := c.Client.NetworkCreate(context.Background(), name, types.NetworkCreate{Attachable: true})
+	fmt.Printf("Creating network %s with the default driver\n", name)
+	res, err := c.Client.NetworkCreate(context.Background(), name, types.NetworkCreate{CheckDuplicate: true, Attachable: true})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

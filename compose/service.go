@@ -52,15 +52,28 @@ func (c *compose) CreateService(m model.DockerCompose) error {
 	dirs := strings.Split(dir, sep)
 	path = dirs[len(dirs)-1]
 
-	// TODO pull image
+	networkName := path + "_default"
 
-	c.client.CreateNetwork(path)
+	c.client.CreateNetwork(networkName)
+
 	for n, s := range m.Services {
-		fmt.Println(n)
-		_, err := c.client.CreateContainer(path, n, s)
+		opts := docker.ImageOpts{"reference": s.Image}
+		res, err := c.client.Images(opts)
 		if err != nil {
 			return err
 		}
+		if len(res) == 0 {
+			name := s.Image
+			if err := c.client.PullImage(name); err != nil {
+				return err
+			}
+		}
+
+		_, err = c.client.CreateContainer(path, n, s)
+		if err != nil {
+			return err
+		}
+		fmt.Println(n)
 	}
 
 	return nil

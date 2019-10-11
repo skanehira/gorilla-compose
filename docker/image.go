@@ -2,12 +2,16 @@ package docker
 
 import (
 	"context"
+	"os"
+	"os/exec"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 )
 
-func (d *Docker) Images(opts map[string]interface{}) ([]types.ImageSummary, error) {
+type ImageOpts map[string]string
+
+func (d *Docker) Images(opts ImageOpts) ([]types.ImageSummary, error) {
 	options := types.ImageListOptions{
 		All: true,
 	}
@@ -20,4 +24,16 @@ func (d *Docker) Images(opts map[string]interface{}) ([]types.ImageSummary, erro
 	options.Filters = args
 
 	return d.Client.ImageList(context.Background(), options)
+}
+
+func (d *Docker) PullImage(name string) error {
+	cmd := exec.Command("docker", "pull", name)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
 }
