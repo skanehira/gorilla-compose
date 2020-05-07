@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.7'
 
 services:
    wordpress:
@@ -17,8 +17,6 @@ services:
    db:
      image: mysql:5.7
      container_name: wordpress_db
-     #volumes:
-     #  - db_data:/var/lib/mysql
      restart: always
      environment:
        MYSQL_ROOT_PASSWORD: root
@@ -26,5 +24,3 @@ services:
        MYSQL_USER: wordpress
        MYSQL_PASSWORD: wordpress
 
-       #volumes:
-       #    db_data:
