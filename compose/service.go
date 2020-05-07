@@ -63,8 +63,7 @@ func (c *compose) CreateService(m model.DockerCompose) error {
 			return err
 		}
 		if len(res) == 0 {
-			name := s.Image
-			if err := c.client.PullImage(name); err != nil {
+			if err := c.client.PullImage(s.Image); err != nil {
 				return err
 			}
 		}

@@ -3,10 +3,11 @@ package docker
 import (
 	"context"
 	"os"
-	"os/exec"
 
+	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/pkg/jsonmessage"
 )
 
 type ImageOpts map[string]string
@@ -27,13 +28,11 @@ func (d *Docker) Images(opts ImageOpts) ([]types.ImageSummary, error) {
 }
 
 func (d *Docker) PullImage(name string) error {
-	cmd := exec.Command("docker", "pull", name)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
+	res, err := d.Client.ImagePull(context.Background(), name, types.ImagePullOptions{})
+	if err != nil {
 		return err
 	}
 
-	return nil
+	out := streams.NewOut(os.Stdout)
+	return jsonmessage.DisplayJSONMessagesToStream(res, out, nil)
 }
