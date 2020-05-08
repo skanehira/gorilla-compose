@@ -2,10 +2,6 @@ package compose
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
 
 	"github.com/skanehira/go-compose/docker"
 	"github.com/skanehira/go-compose/model"
@@ -29,50 +25,27 @@ func (c *compose) Ping() error {
 }
 
 func (c *compose) CreateService(m model.DockerCompose) error {
-	// get parent dir
-	var path string
-	var err error
-	var sep string
-
-	if runtime.GOOS == "windows" {
-		sep = "\\"
-	} else {
-		sep = "/"
-	}
-
-	dir := filepath.Dir(m.Name)
-
-	if dir == "." {
-		path, err = os.Getwd()
-		if err != nil {
-			return err
-		}
-		dir = path
-	}
-	dirs := strings.Split(dir, sep)
-	path = dirs[len(dirs)-1]
-
-	networkName := path + "_default"
+	networkName := m.Project + "_default"
 
 	c.client.CreateNetwork(networkName)
 
-	for n, s := range m.Services {
-		opts := docker.ImageOpts{"reference": s.Image}
+	for serviceName, service := range m.Services {
+		opts := docker.ImageOpts{"reference": service.Image}
 		res, err := c.client.Images(opts)
 		if err != nil {
 			return err
 		}
 		if len(res) == 0 {
-			if err := c.client.PullImage(s.Image); err != nil {
+			if err := c.client.PullImage(service.Image); err != nil {
 				return err
 			}
 		}
 
-		_, err = c.client.CreateContainer(path, n, s)
+		_, err = c.client.CreateContainer(networkName, serviceName, service)
 		if err != nil {
 			return err
 		}
-		fmt.Println(n)
+		fmt.Println(serviceName)
 	}
 
 	return nil

@@ -6,6 +6,7 @@ type DockerCompose struct {
 	Name     string             `yaml:"-"`
 	Version  string             `yaml:"version"`
 	Services map[string]Service `yaml:"services"`
+	Project  string             `yaml:"-"`
 }
 
 type Service struct {
