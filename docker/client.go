@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	ctypes "github.com/docker/cli/cli/compose/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/skanehira/go-compose/model"
 )
 
 type Client interface {
-	CreateContainer(networkName, serviceName string, s model.Service) (string, error)
+	CreateContainer(ctypes.ServiceConfig) (string, error)
 	CreateNetwork(name string) (string, error)
 	Images(opts ImageOpts) ([]types.ImageSummary, error)
 	PullImage(name string) error

@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/docker/cli/cli/compose/loader"
+	"github.com/docker/cli/cli/compose/types"
 	"github.com/skanehira/go-compose/compose"
 	"github.com/skanehira/go-compose/docker"
-	"github.com/skanehira/go-compose/model"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
 )
 
 var notFoundComposeFile = `Can't find a suitable configuration file in this directory or any
@@ -34,34 +34,6 @@ const banner = `
 
 `
 
-func parseComposeFile(project, file string) model.DockerCompose {
-	f, err := os.Open(file)
-	if err != nil {
-		fmt.Fprint(os.Stderr, notFoundComposeFile)
-		os.Exit(1)
-	}
-
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "can't read file: %s\n", err)
-		os.Exit(1)
-	}
-
-	var compose model.DockerCompose
-	if err := yaml.Unmarshal(data, &compose); err != nil {
-		fmt.Fprintf(os.Stderr, "can't unmarshal yaml file: %s\n", err)
-		os.Exit(1)
-	}
-
-	for name, co := range compose.Services {
-		co.Name = name
-	}
-
-	compose.Name = file
-	compose.Project = project
-	return compose
-}
-
 func currentDir() string {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -71,14 +43,44 @@ func currentDir() string {
 	return filepath.Base(dir)
 }
 
+func loadConfig(workDir, file string) (*types.Config, error) {
+	yaml, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	source, err := loader.ParseYAML(yaml)
+	if err != nil {
+		return nil, err
+	}
+
+	detail := types.ConfigDetails{
+		WorkingDir: workDir,
+		ConfigFiles: []types.ConfigFile{
+			{Filename: file, Config: source},
+		},
+	}
+
+	config, err := loader.Load(detail)
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
 func doUp(host, project, file string) error {
+	config, err := loadConfig(project, file)
+	if err != nil {
+		return err
+	}
+
 	com := compose.NewCompose(docker.NewClient(docker.ClientConfig{Host: host, ApiVersion: "1.40"}))
 	if err := com.Ping(); err != nil {
 		return err
 	}
 
-	compose := parseComposeFile(project, file)
-	if err := com.CreateService(compose); err != nil {
+	if err := com.CreateService(config); err != nil {
 		return err
 	}
 

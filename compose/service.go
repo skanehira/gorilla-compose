@@ -3,12 +3,13 @@ package compose
 import (
 	"fmt"
 
+	"github.com/docker/cli/cli/compose/types"
+
 	"github.com/skanehira/go-compose/docker"
-	"github.com/skanehira/go-compose/model"
 )
 
 type Compose interface {
-	CreateService(m model.DockerCompose) error
+	CreateService(*types.Config) error
 	Ping() error
 }
 
@@ -24,12 +25,12 @@ func (c *compose) Ping() error {
 	return c.client.Ping()
 }
 
-func (c *compose) CreateService(m model.DockerCompose) error {
-	networkName := m.Project + "_default"
+func (c *compose) CreateService(config *types.Config) error {
+	for _, net := range config.Networks {
+		c.client.CreateNetwork(net.Name)
+	}
 
-	c.client.CreateNetwork(networkName)
-
-	for serviceName, service := range m.Services {
+	for _, service := range config.Services {
 		opts := docker.ImageOpts{"reference": service.Image}
 		res, err := c.client.Images(opts)
 		if err != nil {
@@ -41,11 +42,11 @@ func (c *compose) CreateService(m model.DockerCompose) error {
 			}
 		}
 
-		_, err = c.client.CreateContainer(networkName, serviceName, service)
+		_, err = c.client.CreateContainer(service)
 		if err != nil {
 			return err
 		}
-		fmt.Println(serviceName)
+		fmt.Println(service.Name)
 	}
 
 	return nil
