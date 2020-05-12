@@ -24,18 +24,23 @@ func convertEnvironment(e types.MappingWithEquals) []string {
 	return envs
 }
 
+func convertPosePort(ports []string) (natPorts map[nat.Port]struct{}) {
+	for _, port := range ports {
+		natPorts[nat.Port(port)] = struct{}{}
+	}
+	return
+}
+
 func convertContainerConfig(s types.ServiceConfig) *container.Config {
 	return &container.Config{
 		Hostname:     s.Hostname,
 		Domainname:   s.DomainName,
 		User:         s.User,
-		AttachStdin:  s.StdinOpen, // when stdin_open is true, AttachStdin is true
-		AttachStdout: true,        // default is true
-		AttachStderr: true,        // default is true
-		ExposedPorts: map[nat.Port]struct{}{},
+		AttachStdin:  s.StdinOpen,
+		ExposedPorts: convertPosePort(s.Expose),
 		Tty:          s.Tty,
 		OpenStdin:    s.StdinOpen,
-		StdinOnce:    s.StdinOpen,                       // AttachStdin and OpenStdin is true, StdinOnce is true
+		StdinOnce:    s.StdinOpen,
 		Env:          convertEnvironment(s.Environment), // TODO read from env file
 		Cmd:          strslice.StrSlice(s.Command),
 		ArgsEscaped:  false, // TODO parse this option
